@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use nom::{
     bytes::complete::tag,
     character::complete::{self, alpha1, digit1, line_ending, space1},
+    combinator::cut,
     multi::separated_list1,
     sequence::{preceded, separated_pair},
     IResult,
@@ -26,10 +27,14 @@ fn winning_numbers(input: &str) -> IResult<&str, HashSet<u32>> {
 }
 
 fn card(input: &str) -> IResult<&str, Card> {
-    let (input, card_id) = preceded(tag("Card "), digit1)(input)?;
+    let (input, card_id) = preceded(tag("Card"), preceded(space1, digit1))(input)?;
     let (input, (winning_numbers, card_numbers)) = preceded(
-        tag(": "),
-        separated_pair(winning_numbers, tag(" | "), winning_numbers),
+        preceded(tag(":"), space1),
+        separated_pair(
+            winning_numbers,
+            preceded(space1, preceded(tag("|"), space1)),
+            winning_numbers,
+        ),
     )(input)?;
 
     let card = Card {
@@ -42,16 +47,22 @@ fn card(input: &str) -> IResult<&str, Card> {
 }
 
 fn parse_cards(input: &str) -> IResult<&str, Vec<Card>> {
-    let (input, cards) = separated_list1(line_ending, card)(input)?;
+    let (input, cards) = cut(separated_list1(line_ending, card))(input)?;
 
     Ok((input, cards))
 }
 
 fn process(input: &str) -> u32 {
-    let cards = parse_cards(input).expect("should parse");
+    let (input, cards) = parse_cards(input).expect("should parse");
 
-    dbg!(cards);
-    0
+    let matching_numbers: u32 = cards
+        .iter()
+        .map(|c| c.card_numbers.intersection(&c.winning_numbers).count())
+        .filter(|c| c > &0_usize)
+        .map(|c| (0..c - 1).fold(1, |x, y| x * 2))
+        .sum();
+
+    matching_numbers
 }
 
 #[cfg(test)]
@@ -76,12 +87,12 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
     }
 
     #[test]
-    #[ignore]
+    // #[ignore]
     fn real_input() {
         let input = include_str!("./input.txt");
 
         let result = process(input);
 
-        assert_eq!(result, 0);
+        assert_eq!(result, 20407);
     }
 }
