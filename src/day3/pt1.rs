@@ -1,6 +1,6 @@
+use itertools::Itertools;
 use std::collections::BTreeSet;
 use std::iter;
-use itertools::Itertools;
 
 #[derive(Debug)]
 struct PartNumber {
@@ -16,19 +16,27 @@ fn process(input: &str) -> u32 {
     let end = iter::once("");
     let lines = start.chain(lines).chain(end);
 
-
     let tuples = lines.tuple_windows::<(_, _, _)>();
     let mut sum_part_numbers = 0;
 
     for tuple in tuples {
         let (line1, current_line, line3) = tuple;
 
-        let symbols = line1.char_indices().filter(|(i, c)| c != &'.' && !c.is_numeric());
-        let symbols2 = current_line.char_indices().filter(|(i, c)| c != &'.' && !c.is_numeric());
-        let symbols3 = line3.char_indices().filter(|(i, c)| c != &'.' && !c.is_numeric());
+        let symbols = line1
+            .char_indices()
+            .filter(|(i, c)| c != &'.' && !c.is_numeric());
+        let symbols2 = current_line
+            .char_indices()
+            .filter(|(i, c)| c != &'.' && !c.is_numeric());
+        let symbols3 = line3
+            .char_indices()
+            .filter(|(i, c)| c != &'.' && !c.is_numeric());
 
-        let symbolsIndex = symbols.chain(symbols2).chain(symbols3).map(|(i, c)| i).collect::<BTreeSet<usize>>();
-
+        let symbols_index = symbols
+            .chain(symbols2)
+            .chain(symbols3)
+            .map(|(i, c)| i)
+            .collect::<BTreeSet<usize>>();
 
         let mut temp_number = "".to_string();
         let mut start_index = 0;
@@ -63,7 +71,7 @@ fn process(input: &str) -> u32 {
                         start_index = 0;
                         temp_number = "".to_string();
                     }
-                    _ => ()
+                    _ => (),
                 }
             }
         }
@@ -72,22 +80,25 @@ fn process(input: &str) -> u32 {
         println!("{:?}", current_line);
         println!("{:?}", line3);
 
-        let filtered_parts: Vec<_> = part_numbers.into_iter().filter(|part_number| {
-            (part_number.start - 1..=part_number.end + 1).any(|i| symbolsIndex.contains(&i))
-        }).collect();
+        let filtered_parts: Vec<_> = part_numbers
+            .into_iter()
+            .filter(|part_number| {
+                (part_number.start - 1..=part_number.end + 1).any(|i| symbols_index.contains(&i))
+            })
+            .collect();
 
-        sum_part_numbers +=
-            filtered_parts.iter().map(|part_number| part_number.number).sum::<u32>();
+        sum_part_numbers += filtered_parts
+            .iter()
+            .map(|part_number| part_number.number)
+            .sum::<u32>();
 
         for part_number in filtered_parts {
             println!("{:?}", part_number);
         }
         println!("-----------------------------------------");
-
     }
     sum_part_numbers
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -107,7 +118,6 @@ mod tests {
 ......755.
 ...$.*....
 .664.598.."#;
-
 
         let result = process(input);
 
@@ -137,14 +147,11 @@ mod tests {
         assert_eq!(result, 62);
     }
 
-
-
     #[test]
     fn real_input() {
         let result = 2 + 2;
 
         let input = include_str!("./input.txt");
-
 
         let result = process(input);
 
