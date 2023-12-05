@@ -16,7 +16,7 @@ struct Card<'a> {
     card_numbers: HashSet<u32>,
 }
 
-fn winning_numbers(input: &str) -> IResult<&str, HashSet<u32>> {
+fn parse_numbers(input: &str) -> IResult<&str, HashSet<u32>> {
     let (input, numbers) = separated_list1(space1, complete::u32)(input)?;
 
     let mut n = HashSet::new();
@@ -31,9 +31,9 @@ fn card(input: &str) -> IResult<&str, Card> {
     let (input, (winning_numbers, card_numbers)) = preceded(
         preceded(tag(":"), space1),
         separated_pair(
-            winning_numbers,
+            parse_numbers,
             preceded(space1, preceded(tag("|"), space1)),
-            winning_numbers,
+            parse_numbers,
         ),
     )(input)?;
 
