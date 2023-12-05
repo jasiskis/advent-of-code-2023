@@ -1,4 +1,12 @@
 use itertools::Itertools;
+use nom::{
+    bytes::complete::{tag, take_until},
+    character::complete::{self, alpha1, alphanumeric1, digit1, line_ending, newline, space1},
+    combinator::rest,
+    multi::separated_list1,
+    sequence::{pair, preceded, separated_pair, terminated},
+    IResult,
+};
 use std::collections::{BTreeSet, VecDeque};
 use std::iter;
 
@@ -44,7 +52,9 @@ impl<'a> Map<'a> {
     }
 }
 
+#[derive(Debug)]
 struct Almanac<'a> {
+    seeds: Vec<u32>,
     maps: Vec<Map<'a>>,
 }
 
@@ -54,14 +64,72 @@ impl<'a> Almanac<'a> {
             .iter()
             .fold(seed, |last_location, map| map.next_location(last_location))
     }
+
+    fn find_lowest_location(&self) -> u32 {
+        self.seeds
+            .iter()
+            .map(|seed| self.find_location(*seed))
+            .min()
+            .unwrap()
+    }
+}
+
+fn parse_maps(input: &str) -> IResult<&str, Map> {
+    let (input, (source, destination)) = terminated(
+        separated_pair(alphanumeric1, tag("-to-"), alphanumeric1),
+        take_until("\n"),
+    )(input)?;
+
+    let (input, raw_coordinates) = preceded(
+        newline,
+        separated_list1(newline, separated_list1(space1, complete::u32)),
+    )(input)?;
+
+    let coordinates = raw_coordinates
+        .iter()
+        .map(|c| match c[..] {
+            [dest_start, source_start, offset] => Coordinate {
+                dest_start,
+                source_start,
+                offset,
+            },
+            _ => panic!("shouldn't match anything else"),
+        })
+        .collect();
+
+    let map = Map {
+        source,
+        destination,
+        coordinates,
+    };
+
+    Ok((input, map))
+}
+
+fn parse(input: &str) -> IResult<&str, Almanac> {
+    let (input, seeds) = preceded(
+        preceded(tag("seeds:"), space1),
+        separated_list1(space1, complete::u32),
+    )(input)?;
+
+    let (input, maps) = preceded(
+        pair(newline, newline),
+        separated_list1(pair(newline, newline), parse_maps),
+    )(input)?;
+
+    Ok((input, Almanac { seeds, maps }))
 }
 
 fn process(input: &str) -> u32 {
-    todo!();
+    let (input, almanac) = parse(input).expect("parsed correctly");
+
+    almanac.find_lowest_location()
 }
 
 #[cfg(test)]
 mod tests {
+    use nom::Parser;
+
     use super::*;
 
     #[test]
@@ -136,11 +204,11 @@ temperature-to-humidity map:
 humidity-to-location map:
 60 56 37
 56 93 4
-"#;
+"#
+        .trim();
 
         let result = process(input);
-
-        assert_eq!(result, 0);
+        assert_eq!(result, 35);
     }
 
     #[test]
