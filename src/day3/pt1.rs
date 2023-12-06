@@ -75,10 +75,6 @@ fn process(input: &str) -> u32 {
                 }
             }
         }
-        println!("-----------------------------------------");
-        println!("{:?}", line1);
-        println!("{:?}", current_line);
-        println!("{:?}", line3);
 
         let filtered_parts: Vec<_> = part_numbers
             .into_iter()
@@ -91,11 +87,6 @@ fn process(input: &str) -> u32 {
             .iter()
             .map(|part_number| part_number.number)
             .sum::<u32>();
-
-        for part_number in filtered_parts {
-            println!("{:?}", part_number);
-        }
-        println!("-----------------------------------------");
     }
     sum_part_numbers
 }
@@ -155,15 +146,6 @@ mod tests {
 
         let result = process(input);
 
-        assert_eq!(result, 0);
-    }
-
-    #[test]
-    fn quick_one() {
-        let range: Vec<_> = (-1..10).collect();
-
-        dbg!(range);
-
-        todo!()
+        assert_eq!(result, 520019);
     }
 }

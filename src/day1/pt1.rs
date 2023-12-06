@@ -1,24 +1,31 @@
-use std::fs;
+use itertools::Itertools;
+use std::collections::BTreeSet;
+use std::iter;
 
-
-fn day1() {
-    let lines: Vec<String> =  fs::read_to_string("../input.txt").expect("File not found!").lines().map(String::from).collect();
-
-    for line in lines {
-        println!("{}", line);
-    }
-
-
-    println!("Hello, world!");
+fn process(input: &str) -> u32 {
+    0
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
 
-        day1();
+    #[test]
+    fn base_example() {
+        let input = r#"
+"#;
+
+        let result = process(input);
+
+        assert_eq!(result, 0);
+    }
+
+    #[test]
+    fn real_input() {
+        let input = include_str!("./input.txt");
+
+        let result = process(input);
+
+        assert_eq!(result, 0);
     }
 }

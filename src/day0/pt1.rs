@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use std::iter;
 
 fn process(input: &str) -> u32 {
-    todo!();
+    0
 }
 
 #[cfg(test)]

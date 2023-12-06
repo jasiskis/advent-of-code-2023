@@ -1,9 +1,9 @@
+use itertools::Itertools;
 use std::collections::BTreeSet;
 use std::iter;
-use itertools::Itertools;
 
 fn process(input: &str) -> u32 {
-    todo!();
+    0
 }
 
 #[cfg(test)]
@@ -12,11 +12,8 @@ mod tests {
 
     #[test]
     fn base_example() {
-        let result = 2 + 2;
-
         let input = r#"
 "#;
-
 
         let result = process(input);
 
@@ -25,10 +22,7 @@ mod tests {
 
     #[test]
     fn real_input() {
-        let result = 2 + 2;
-
         let input = include_str!("./input.txt");
-
 
         let result = process(input);
 

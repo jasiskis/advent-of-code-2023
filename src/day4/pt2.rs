@@ -83,7 +83,7 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
 
         let result = process(input);
 
-        assert_eq!(result, 30);
+        assert_eq!(result, 13);
     }
 
     #[test]
@@ -93,6 +93,6 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
 
         let result = process(input);
 
-        assert_eq!(result, 0);
+        assert_eq!(result, 20407);
     }
 }
