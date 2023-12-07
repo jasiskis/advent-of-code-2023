@@ -1,6 +1,6 @@
 use itertools::Itertools;
-use std::collections::BTreeMap;
 use std::iter;
+use std::{cmp::Ordering, collections::BTreeMap};
 
 use lazy_static::lazy_static;
 use nom::{
@@ -30,26 +30,68 @@ lazy_static! {
     ]);
 }
 
+#[derive(Debug, Eq, PartialEq, PartialOrd, Ord)]
+enum HandType {
+    Five = 6,
+    Four = 5,
+    FH = 4,
+    Three = 3,
+    TwoPairs = 2,
+    OnePair = 1,
+    HighHand = 0,
+}
+
+#[derive(Debug, Eq, PartialEq, PartialOrd)]
 struct CardHand<'a> {
     cards: &'a str,
     bid: u32,
+    hand_type: HandType,
 }
 
-// fn parse(input: &str) -> IResult<&str, Vec<CardHand>> {
-//     let parser = separated_pair::<&str, &str, _, &str, _>(alphanumeric1, space1, digit1)
-//         .map(|(cards, bid)| CardHand { cards, bid: 0 });
-//
-//     let (input, cards) = separated_list1(newline, parser).parse(input)?;
-//
-//     Ok((input, cards))
-// }
+impl<'a> Ord for CardHand<'a> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match self.hand_type.cmp(&other.hand_type) {
+            Ordering::Equal => self
+                .cards
+                .chars()
+                .zip(other.cards.chars())
+                .find(|(a, b)| a != b)
+                .map(|(a, b)| CARD_POWER[&a].cmp(&CARD_POWER[&b]))
+                .unwrap(),
+            x => x,
+        }
+    }
+}
 
 fn parse(input: &str) -> IResult<&str, Vec<CardHand>> {
     let (input, cards) = separated_list1(
         newline,
         map(
             separated_pair(alphanumeric1, space1, complete::u32),
-            |(cards, bid): (&str, u32)| CardHand { cards, bid },
+            |(cards, bid): (&str, u32)| {
+                let hand_type = match cards
+                    .chars()
+                    .counts_by(|a| a)
+                    .values()
+                    .sorted_by(|a, b| Ord::cmp(&a, &b))
+                    .rev()
+                    .collect::<Vec<&usize>>()[..]
+                {
+                    [5] => HandType::Five,
+                    [4, 1] => HandType::Four,
+                    [3, 2] => HandType::FH,
+                    [3, 1, 1] => HandType::Three,
+                    [2, 2, 1] => HandType::TwoPairs,
+                    [2, 1, 1, 1] => HandType::OnePair,
+                    _ => HandType::HighHand,
+                };
+
+                CardHand {
+                    cards,
+                    bid,
+                    hand_type,
+                }
+            },
         ),
     )(input)?;
 
@@ -59,7 +101,17 @@ fn parse(input: &str) -> IResult<&str, Vec<CardHand>> {
 fn process(input: &str) -> u32 {
     let (input, result) = parse(input).expect("stuff");
 
-    0
+    let x = result
+        .iter()
+        .sorted_by(|a, b| a.cmp(b))
+        .enumerate()
+        .inspect(|x| println!("{:?}", &x))
+        .map(|(i, val)| val.bid * ((i + 1) as u32))
+        .sum::<u32>();
+
+    dbg!(&result);
+
+    x
 }
 
 #[cfg(test)]
@@ -79,7 +131,7 @@ QQQJA 483
 
         let result = process(input);
 
-        assert_eq!(result, 0);
+        assert_eq!(result, 6440);
     }
 
     #[test]
@@ -88,6 +140,6 @@ QQQJA 483
 
         let result = process(input);
 
-        assert_eq!(result, 0);
+        assert_eq!(result, 253638586);
     }
 }
