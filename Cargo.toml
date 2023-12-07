@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 itertools = "0.12.0"
 nom = { version = "7.1.3", features = [] }
+lazy_static = "1.4.0"
+nom-supreme = "0.8.0"

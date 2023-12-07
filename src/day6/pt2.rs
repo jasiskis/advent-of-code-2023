@@ -73,6 +73,6 @@ Distance:  9  40  200
 
         let result = process(input);
 
-        assert_eq!(result, 74698);
+        assert_eq!(result, 27563421);
     }
 }
