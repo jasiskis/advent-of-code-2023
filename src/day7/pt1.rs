@@ -109,8 +109,6 @@ fn process(input: &str) -> u32 {
         .map(|(i, val)| val.bid * ((i + 1) as u32))
         .sum::<u32>();
 
-    dbg!(&result);
-
     x
 }
 
