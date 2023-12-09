@@ -22,15 +22,15 @@ fn process(input: &str) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::*;
 
-    #[test]
-    fn base_example() {
-        let input = r#"
-"#;
-
+    #[rstest]
+    #[case("", 0)]
+    #[case("", 0)]
+    fn base_example(#[case] input: &str, #[case] expected: u32) {
         let result = process(input);
 
-        assert_eq!(result, 0);
+        assert_eq!(result, expected);
     }
 
     #[test]
