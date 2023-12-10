@@ -54,7 +54,7 @@ fn process(input: &str) -> u32 {
         results.push(possibilities);
     }
 
-    results.iter().fold(1, |acc, e| acc * e)
+    results.iter().product()
 }
 
 #[cfg(test)]

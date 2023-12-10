@@ -51,7 +51,7 @@ fn process(input: &str) -> i64 {
                 }
             }
 
-            last_items.iter().fold(0, |a, b| a + b)
+            last_items.iter().sum()
         })
         .collect();
 
