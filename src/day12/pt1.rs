@@ -76,85 +76,92 @@ fn compute_arrangement(
     mut remaining_damaged: VecDeque<i32>,
     damaged_count: i32,
     mut so_far: Vec<Spring>,
+    r: String,
 ) -> i32 {
     let springs_l = &springs.clone();
     let rmd = &remaining_damaged.clone();
     let damaged_count_l = &damaged_count.clone();
-    let log = format!(
-        "{:?} {:?} {}",
-        springs_l.iter().map(|x| x.to_string()).join(""),
-        rmd,
-        damaged_count_l
-    );
 
     let log = format!(
-        "{:?} --- {:?} {:?} {}",
+        "{:?} --- {} {:?} {:?} {}",
         &so_far.iter().map(|x| x.to_string()).join(""),
+        r,
         springs_l.iter().map(|x| x.to_string()).join(""),
         rmd,
         damaged_count_l
     );
-    // println!("{}", &log);
-    if remaining_damaged.is_empty() {
-        println!("{}", &log);
-
-        return 1;
-    }
 
     let current_spring = springs.pop_front();
 
-    let mut current_group = remaining_damaged.front().unwrap();
+    let maybe_group = remaining_damaged.front();
 
-    let x = match current_spring {
-        Some(Spring::Operational) => {
+    match (current_spring, maybe_group) {
+        (Some(Spring::Operational), Some(current_group)) => {
             so_far.push(Spring::Operational);
             if &damaged_count == current_group {
                 remaining_damaged.pop_front();
-                compute_arrangement(springs, remaining_damaged, 0, so_far)
-            } else if damaged_count > 0 && *current_group > damaged_count {
+                compute_arrangement(springs, remaining_damaged, 0, so_far, r)
+            } else if damaged_count > 0 {
                 0
             } else {
-                compute_arrangement(springs, remaining_damaged, damaged_count, so_far)
+                compute_arrangement(springs, remaining_damaged, damaged_count, so_far, r)
             }
         }
-        Some(Spring::Damaged) => {
+        (Some(Spring::Damaged), Some(current_group)) => {
             so_far.push(Spring::Damaged);
             if (damaged_count + 1) > *current_group {
                 0
             } else {
-                compute_arrangement(springs, remaining_damaged, damaged_count + 1, so_far)
+                compute_arrangement(springs, remaining_damaged, damaged_count + 1, so_far, r)
             }
         }
-        Some(Spring::Unkown) => {
+        (Some(Spring::Unkown), _) => {
             let mut operational = springs.clone();
-
-            let mut sfd = so_far.clone();
-            sfd.push(Spring::Damaged);
-            let mut sfo = so_far.clone();
-            sfo.push(Spring::Operational);
 
             springs.push_front(Spring::Damaged);
             operational.push_front(Spring::Operational);
 
-            compute_arrangement(springs, remaining_damaged.clone(), damaged_count, sfd)
-                + compute_arrangement(operational, remaining_damaged.clone(), damaged_count, sfo)
+            compute_arrangement(
+                springs,
+                remaining_damaged.clone(),
+                damaged_count,
+                so_far.clone(),
+                r.clone(),
+            ) + compute_arrangement(
+                operational,
+                remaining_damaged.clone(),
+                damaged_count,
+                so_far.clone(),
+                r.clone(),
+            )
         }
-        None => {
+        (None, Some(current_group)) if remaining_damaged.len() == 1 => {
             if *current_group == damaged_count {
-                println!("{}", &log);
-                return 1;
+                println!("a: {}", &log);
+                1
             } else {
                 0
             }
         }
-    };
-
-    // println!("{} => {}", &log, x);
-    x
+        (Some(Spring::Damaged), None) => 0,
+        (Some(Spring::Operational), None) => {
+            compute_arrangement(springs, remaining_damaged, damaged_count, so_far, r)
+        }
+        (None, None) => {
+            println!("c: {}", &log);
+            1
+        }
+        (_, _) => 0,
+    }
 }
 
 fn arrangement(springs: VecDeque<Spring>, remaining_damaged: VecDeque<i32>) -> i32 {
-    compute_arrangement(springs, remaining_damaged, 0, Vec::new())
+    let r = remaining_damaged
+        .clone()
+        .iter()
+        .map(|x| x.to_string())
+        .join(", ");
+    compute_arrangement(springs, remaining_damaged, 0, Vec::new(), r)
 }
 
 fn process(input: &str) -> i32 {
@@ -163,9 +170,6 @@ fn process(input: &str) -> i32 {
     records
         .into_iter()
         .map(|record| arrangement(record.springs, record.damaged))
-        .inspect(|x| {
-            dbg!(x);
-        })
         .sum()
 }
 
@@ -187,6 +191,64 @@ mod tests {
             Damaged,
         ]);
         let damaged = VecDeque::from(vec![1, 1, 3]);
+
+        let result = arrangement(springs, damaged);
+        assert_eq!(result, 1);
+    }
+
+    #[test]
+    fn my_test() {
+        use Spring::*;
+        let springs = VecDeque::from(vec![Unkown, Unkown, Damaged]);
+        let damaged = VecDeque::from(vec![1, 1]);
+
+        let result = arrangement(springs, damaged);
+        assert_eq!(result, 1);
+    }
+
+    #[test]
+    fn my_test2() {
+        use Spring::*;
+        let springs = VecDeque::from(vec![Unkown, Unkown, Damaged, Operational]);
+        let damaged = VecDeque::from(vec![1, 1]);
+
+        let result = arrangement(springs, damaged);
+        assert_eq!(result, 1);
+    }
+
+    #[test]
+    fn my_test3() {
+        use Spring::*;
+        let springs = VecDeque::from(vec![Unkown, Unkown, Damaged, Unkown, Operational]);
+        let damaged = VecDeque::from(vec![1, 1]);
+
+        let result = arrangement(springs, damaged);
+        assert_eq!(result, 1);
+    }
+
+    #[test]
+    fn my_test4() {
+        use Spring::*;
+        let springs = VecDeque::from(vec![Unkown, Unkown, Damaged, Unkown, Damaged]);
+        let damaged = VecDeque::from(vec![1, 1]);
+
+        let result = arrangement(springs, damaged);
+        assert_eq!(result, 1);
+    }
+
+    #[test]
+    fn my_test5() {
+        use Spring::*;
+        let springs = VecDeque::from(vec![
+            Unkown,
+            Unkown,
+            Damaged,
+            Unkown,
+            Unkown,
+            Operational,
+            Damaged,
+        ]);
+        let damaged = VecDeque::from(vec![1, 1]);
 
         let result = arrangement(springs, damaged);
         assert_eq!(result, 1);
@@ -261,7 +323,6 @@ mod tests {
     }
 
     #[rstest]
-    #[ignore]
     #[case("
 ???.### 1,1,3
 .??..??...?##. 1,1,3
@@ -277,12 +338,11 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn real_input() {
         let input = include_str!("./input.txt");
 
         let result = process(input);
 
-        assert_eq!(result, 0);
+        assert_eq!(result, 7922);
     }
 }
