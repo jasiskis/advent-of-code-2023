@@ -1,3 +1,4 @@
+use grid::{grid, Grid};
 use itertools::Itertools;
 use std::collections::BTreeSet;
 use std::iter;
@@ -11,11 +12,37 @@ use nom::{
     IResult,
 };
 
-fn parse(input: &str) -> IResult<&str, u32> {
-    Ok((input, 0))
+#[derive(Debug, Default, PartialEq, Eq)]
+enum Terrain {
+    Round,
+    Cube,
+
+    #[default]
+    Empty,
+}
+
+fn parse(input: &str) -> Grid<Terrain> {
+    input
+        .lines()
+        .map(|line| {
+            line.chars()
+                .map(|c| match c {
+                    '#' => Terrain::Cube,
+                    'O' => Terrain::Round,
+                    '.' => Terrain::Empty,
+                    _ => panic!("ai ai ai"),
+                })
+                .collect()
+        })
+        .fold(Grid::new(0, 0), |mut acc, r| {
+            acc.push_row(r);
+            acc
+        })
 }
 
 fn process(input: &str) -> u32 {
+    let grids = parse(input);
+
     0
 }
 
@@ -25,8 +52,17 @@ mod tests {
     use rstest::*;
 
     #[rstest]
-    #[case("", 0)]
-    #[case("", 0)]
+    #[case("
+O....#....
+O.OO#....#
+.....##...
+OO.#O....O
+.O.....O#.
+O.#..O.#.#
+..O..#O..O
+.......O..
+#....###..
+#OO..#....".trim(), 136)]
     fn base_example(#[case] input: &str, #[case] expected: u32) {
         let result = process(input);
 
